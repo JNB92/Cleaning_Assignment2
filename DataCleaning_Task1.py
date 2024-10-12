@@ -39,15 +39,15 @@ cleaned_data_frame = pd.get_dummies(cleaned_data_frame, columns=['job', 'marital
 # Drop 'duration' as it's not usable for pre-call predictions
 cleaned_data_frame.drop(columns=['duration'], inplace=True)
 
-# Numerical Columns
-number_cols = ['age', 'campaign', 'pdays', 'previous', 'emp.var.rate', 'cons.price.idx',
-               'cons.conf.idx', 'euribor3m', 'nr.employed']
+# # Numerical Columns
+# number_cols = ['age', 'campaign', 'pdays', 'previous', 'emp.var.rate', 'cons.price.idx',
+#                'cons.conf.idx', 'euribor3m', 'nr.employed']
 
-# Initialise the scaler
-scaler = StandardScaler()
-
-# Scale the numerical columns
-cleaned_data_frame[number_cols] = scaler.fit_transform(cleaned_data_frame[number_cols])
+# # Initialise the scaler
+# scaler = StandardScaler()
+#
+# # Scale the numerical columns
+# cleaned_data_frame[number_cols] = scaler.fit_transform(cleaned_data_frame[number_cols])
 
 # Save the cleaned data to a new CSV file (added .csv extension)
 cleaned_data_frame.to_csv('Cleaned-Bank_additional_full.csv', index=False)
