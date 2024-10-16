@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
+
+
 # Load the dataset with the correct delimiter
 data_frame = pd.read_csv('bank-additional-full (3).csv', delimiter=';')
 
@@ -19,6 +21,9 @@ print(cleaned_data_frame.describe())
 
 # Check for missing values ('unknown' for this dataset)
 print(cleaned_data_frame.isin(['unknown']).sum())
+
+print(cleaned_data_frame['y'].value_counts())
+
 
 # Boxplot for outlier detection in 'age'
 sns.boxplot(x=cleaned_data_frame['age'])
@@ -40,14 +45,19 @@ cleaned_data_frame = pd.get_dummies(cleaned_data_frame, columns=['job', 'marital
 cleaned_data_frame.drop(columns=['duration'], inplace=True)
 
 # # Numerical Columns
-# number_cols = ['age', 'campaign', 'pdays', 'previous', 'emp.var.rate', 'cons.price.idx',
-#                'cons.conf.idx', 'euribor3m', 'nr.employed']
+number_cols = ['age', 'campaign', 'pdays', 'previous', 'emp.var.rate', 'cons.price.idx',
+               'cons.conf.idx', 'euribor3m', 'nr.employed']
 
-# # Initialise the scaler
-# scaler = StandardScaler()
-#
-# # Scale the numerical columns
-# cleaned_data_frame[number_cols] = scaler.fit_transform(cleaned_data_frame[number_cols])
+
+
+cleaned_data_frame['age_group'] = pd.cut(cleaned_data_frame['age'], bins=[18, 30, 50, 100], labels=['young', 'middle-aged', 'old'])
+
+
+# Initialise the scaler
+scaler = StandardScaler()
+
+# Scale the numerical columns
+cleaned_data_frame[number_cols] = scaler.fit_transform(cleaned_data_frame[number_cols])
 
 # Save the cleaned data to a new CSV file (added .csv extension)
 cleaned_data_frame.to_csv('Cleaned-Bank_additional_full.csv', index=False)
