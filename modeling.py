@@ -27,12 +27,15 @@ logreg_cv_scores = cross_val_score(logreg, X_train_smote, y_train_smote, cv=5, s
 print(f"Logistic Regression AUC-ROC (5-fold cross-validation): {logreg_cv_scores}")
 print(f"Mean AUC-ROC: {logreg_cv_scores.mean():.4f}")
 
+
 # Step 4: Train a Random Forest classifier with class weights and evaluate it using cross-validation
 print("\n=== Random Forest with Cross-Validation ===")
 rf = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
 rf_cv_scores = cross_val_score(rf, X_train_smote, y_train_smote, cv=5, scoring='roc_auc')
 print(f"Random Forest AUC-ROC (5-fold cross-validation): {rf_cv_scores}")
 print(f"Mean AUC-ROC: {rf_cv_scores.mean():.4f}")
+
+
 
 # Step 5: Perform hyperparameter tuning for Random Forest using RandomizedSearchCV
 # This helps find the optimal combination of parameters without exhaustively searching all combinations
@@ -43,6 +46,7 @@ param_distributions_rf = {
     'min_samples_split': [5, 10]    # Control the minimum number of samples required to split a node
 }
 
+
 # RandomizedSearchCV tests random combinations of parameters for Random Forest, using AUC-ROC as the scoring metric
 random_search_rf = RandomizedSearchCV(
     RandomForestClassifier(random_state=42, class_weight='balanced'),
@@ -50,24 +54,52 @@ random_search_rf = RandomizedSearchCV(
     cv=3, scoring='roc_auc', random_state=42, n_jobs=2  # Run with 2 parallel jobs to speed up search
 )
 
+
 # Fit RandomizedSearchCV to the training data (SMOTE balanced)
 random_search_rf.fit(X_train_smote, y_train_smote)
+
 
 # Output the best parameters and the best score from the random search
 print(f"Best Hyperparameters for Random Forest: {random_search_rf.best_params_}")
 print(f"Best AUC-ROC Score (RF): {random_search_rf.best_score_:.4f}")
+
 
 # Step 6: Train the final Logistic Regression and Random Forest models using the SMOTE-balanced data
 logreg.fit(X_train_smote, y_train_smote)
 rf_best = random_search_rf.best_estimator_
 rf_best.fit(X_train_smote, y_train_smote)
 
+
+# Extract feature importance values from the trained Random Forest model
+importances = rf_best.feature_importances_
+feature_names = X.columns  # Get feature names from the dataset
+
+# Create a DataFrame for feature importances to easily view and sort by importance
+feature_importance_df = pd.DataFrame({'feature': feature_names, 'importance': importances})
+feature_importance_df = feature_importance_df.sort_values(by='importance', ascending=False)  # Sort from most to least important
+print("\nTop Features by Importance in Random Forest Model:")
+print(feature_importance_df.head(10))  # Display the top 10 most important features based on the Random Forest model
+
+# Extract coefficients from the trained Logistic Regression model
+coefficients = logreg.coef_[0]  # Coefficients for each feature, directly from the logistic regression model
+feature_names = X.columns  # Ensures we’re matching coefficient values with their corresponding feature names
+
+# Create a DataFrame for logistic regression coefficients to easily view and sort
+coef_df = pd.DataFrame({'feature': feature_names, 'coefficient': coefficients})
+coef_df = coef_df.sort_values(by='coefficient', ascending=False)  # Sort from most to least positive coefficients
+print("\nTop Positive and Negative Coefficients in Logistic Regression Model:")
+print(coef_df.head(10))  # Display the top 10 positive coefficients (indicate positive influence on the target)
+print(coef_df.tail(10))  # Display the bottom 10 negative coefficients (indicate negative influence on the target)
+
+
 # Step 7: Evaluate both models on the test set using AUC-ROC
 logreg_probs = logreg.predict_proba(X_test)[:, 1]
 rf_probs = rf_best.predict_proba(X_test)[:, 1]
 
+
 print(f"\nLogistic Regression AUC-ROC on Test Set: {roc_auc_score(y_test, logreg_probs):.4f}")
 print(f"Random Forest AUC-ROC on Test Set: {roc_auc_score(y_test, rf_probs):.4f}")
+
 
 # Step 8: Evaluate the models' accuracy on the test set to get a broader sense of performance
 logreg_preds = logreg.predict(X_test)
@@ -75,6 +107,7 @@ rf_preds = rf_best.predict(X_test)
 
 print(f"Logistic Regression Accuracy: {accuracy_score(y_test, logreg_preds):.4f}")
 print(f"Random Forest Accuracy: {accuracy_score(y_test, rf_preds):.4f}")
+
 
 # Save the trained models to disk for future use
 joblib.dump(logreg, 'logreg_best_model.pkl')
